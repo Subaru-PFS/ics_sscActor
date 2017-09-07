@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 import actorcore.Actor
+import sscActor.Commands.SnmpThread as SnmpThread
+import threading
 
 class OurActor(actorcore.Actor.Actor):
     def __init__(self, name,
@@ -8,19 +10,22 @@ class OurActor(actorcore.Actor.Actor):
                  modelNames=(),
                  debugLevel=30):
 
-        """ Setup an Actor instance. See help for actorcore.Actor for details. """
-        
-        # This sets up the connections to/from the hub, the logger, and the twisted reactor.
-        #
         actorcore.Actor.Actor.__init__(self, name, 
                                        productName=productName, 
                                        configFile=configFile,
                                        modelNames=modelNames)
+        self.everConnected = False
 
-        # At this
+    def connectionMade(self):
+        if self.everConnected is False:
+            self.logger.info("Connected to tron, starting threads")
+            self.snmpth = SnmpThread.SnmpThread(
+                kwargs = {'actor': self, 'cid': 1})
+            self.snmpth.start()
+            self.logger.warn('Started threading')
+            self.everConnected = True
 
-#
-# To work
+
 def main():
     theActor = OurActor('ssc', productName='sscActor')
     theActor.run()
